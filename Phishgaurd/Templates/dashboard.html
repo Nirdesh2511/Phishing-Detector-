@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard - Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='phishing-detector-css.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 30px;
+            min-height: 600px;
+        }
+        
+        .sidebar {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .sidebar-header .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+        
+        .sidebar-header .user-info h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        
+        .sidebar-header .user-info p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+        
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: rgba(74, 108, 250, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .sidebar-menu a i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .welcome-banner {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .welcome-banner h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .welcome-banner p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-card .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .stat-card .safe {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: var(--safe-color);
+        }
+        
+        .stat-card .danger {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: var(--danger-color);
+        }
+        
+        .stat-card .warning {
+            background-color: rgba(255, 152, 0, 0.2);
+            color: var(--warning-color);
+        }
+        
+        .stat-card h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        .history-section {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .history-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .history-filters {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .history-table th, .history-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e1e5f2;
+        }
+        
+        .history-table th {
+            font-weight: 600;
+            color: var(--text-light);
+        }
+        
+        .history-table tbody tr:hover {
+            background-color: rgba(74, 108, 250, 0.05);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .status-badge.safe {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: var(--safe-color);
+        }
+        
+        .status-badge.phishing {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: var(--danger-color);
+        }
+        
+        .logout-link {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #e1e5f2;
+        }
+        
+        .logout-link a {
+            color: var(--danger-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+        
+        .logout-link a i {
+            margin-right: 10px;
+        }
+        
+        .logout-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 5px;
+        }
+        
+        .pagination a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 35px;
+            height: 35px;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        
+        .pagination a:hover, .pagination a.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <h1>PhishGuard</h1>
+            </div>
+            <p class="tagline">Advanced Phishing URL Detection</p>
+        </header>
+
+        <div class="dashboard-container">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <h3>Hi, {{ current_user.username }}</h3>
+                        <p>{{ current_user.email }}</p>
+                    </div>
+                </div>
+                
+                <ul class="sidebar-menu">
+                    <li>
+                        <a href="{{ url_for('dashboard') }}" class="active">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('check_url') }}">
+                            <i class="fas fa-search"></i> Check URL
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('history') }}">
+                            <i class="fas fa-history"></i> History
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('settings') }}">
+                            <i class="fas fa-cog"></i> Settings
+                        </a>
+                    </li>
+                </ul>
+                
+                <div class="logout-link">
+                    <a href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="welcome-banner">
+                    <h2>Welcome back, {{ current_user.username }}!</h2>
+                    <p>Here's your phishing detection activity overview.</p>
+                </div>
+                
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon safe">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h3>Safe URLs</h3>
+                        <div class="stat-value">{{ safe_count }}</div>
+                        <div class="stat-label">URLs checked and found safe</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3>Phishing Detected</h3>
+                        <div class="stat-value">{{ phishing_count }}</div>
+                        <div class="stat-label">Potentially malicious URLs found</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon warning">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Safety Score</h3>
+                        <div class="stat-value">{{ safety_score }}%</div>
+                        <div class="stat-label">Based on your recent activity</div>
+                    </div>
+                </div>
+                
+                <div class="history-section">
+                    <div class="history-header">
+                        <h2>Recent Activity</h2>
+                        <div class="history-filters">
+                            <button class="btn-outline">All</button>
+                            <button class="btn-outline">Safe</button>
+                            <button class="btn-outline">Phishing</button>
+                        </div>
+                    </div>
+                    
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>URL</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in history %}
+                            <tr>
+                                <td>{{ entry.url }}</td>
+                                <td>{{ entry.date }}</td>
+                                <td>
+                                    {% if entry.is_phishing %}
+                                    <span class="status-badge phishing">Phishing</span>
+                                    {% else %}
+                                    <span class="status-badge safe">Safe</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ entry.confidence }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    
+                    <div class="pagination">
+                        <a href="#"><i class="fas fa-chevron-left"></i></a>
+                        <a href="#" class="active">1</a>
+                        <a href="#">2</a>
+                        <a href="#">3</a>
+                        <a href="#"><i class="fas fa-chevron-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2025 PhishGuard - By Nirdesh & Rutvi</p>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Contact</a>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

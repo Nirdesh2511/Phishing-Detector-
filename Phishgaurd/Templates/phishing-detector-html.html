@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard - URL Phishing Detection</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='phishing-detector-css.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+        
+        .nav-links a:hover {
+            background-color: rgba(74, 108, 250, 0.1);
+        }
+        
+        .nav-links .user-greeting {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-right: 10px;
+        }
+        
+        .nav-links .btn-logout {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .nav-links .btn-logout:hover {
+            background-color: rgba(244, 67, 54, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <h1>PhishGuard</h1>
+            </div>
+            <p class="tagline">Advanced Phishing URL Detection</p>
+            
+            <div class="nav-header">
+                <div></div> <!-- Empty div for flex spacing -->
+                <div class="nav-links">
+                    {% if current_user.is_authenticated %}
+                        <span class="user-greeting">Hi, {{ current_user.username }}</span>
+                        <a href="{{ url_for('dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                        <a href="{{ url_for('history') }}">
+                            <i class="fas fa-history"></i> History
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="btn-logout">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                        <a href="{{ url_for('register') }}">
+                            <i class="fas fa-user-plus"></i> Register
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="search-container">
+                <form id="url-form">
+                    <div class="input-group">
+                        <input type="text" id="url-input" name="url" placeholder="Enter a URL to check (e.g., https://example.com)" required>
+                        <button type="submit" id="check-button">
+                            <i class="fas fa-search"></i> Check URL
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="result-container" id="result-container" style="display: none;">
+                <div class="result-header">
+                    <h2>Analysis Results</h2>
+                    <div class="confidence-meter">
+                        <div class="meter-label">Confidence Score:</div>
+                        <div class="meter">
+                            <div class="meter-fill" id="confidence-fill"></div>
+                        </div>
+                        <div class="meter-value" id="confidence-value">0%</div>
+                    </div>
+                </div>
+
+                <div class="result-body">
+                    <div class="url-display">
+                        <div class="url-label">Analyzed URL:</div>
+                        <div class="url-value" id="analyzed-url"></div>
+                    </div>
+                    
+                    <div class="verdict-box" id="verdict-box">
+                        <div class="verdict-icon" id="verdict-icon">
+                            <i class="fas fa-check-circle safe-icon"></i>
+                            <i class="fas fa-exclamation-triangle warning-icon"></i>
+                        </div>
+                        <div class="verdict-text" id="verdict-text">
+                            <!-- Will be filled by JavaScript -->
+                        </div>
+                    </div>
+
+                    <div class="features-container">
+                        <div class="features-toggle" id="features-toggle">
+                            <span>Show Technical Details</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="features-details" id="features-details" style="display: none;">
+                            <table class="features-table">
+                                <thead>
+                                    <tr>
+                                        <th>Feature</th>
+                                        <th>Value</th>
+                                        <th>Risk Impact</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="features-table-body">
+                                    <!-- Will be filled by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="loading" id="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Analyzing URL...</p>
+            </div>
+
+            <div class="error-message" id="error-message" style="display: none;">
+                <!-- Will be filled by JavaScript -->
+            </div>
+        </main>
+
+        <section class="info-section">
+            <h2>About PhishGuard</h2>
+            <div class="info-cards">
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3>99% Accuracy</h3>
+                    <p>Our advanced machine learning algorithm detects phishing URLs with 99% accuracy by analyzing multiple URL characteristics.</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h3>Privacy Focused</h3>
+                    <p>No data stored, no API keys needed. Your URLs are analyzed privately on our secure servers.</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>AI-Powered</h3>
+                    <p>Using machine learning to identify subtle patterns in phishing URLs that traditional methods might miss.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="how-it-works">
+            <h2>How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1 :-</div>
+                    <div class="step-content">
+                        <h3>Enter URL</h3>
+                        <p>Input any suspicious URL you want to check for phishing indicators.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2 :-</div>
+                    <div class="step-content">
+                        <h3>Advanced Analysis</h3>
+                        <p>Our system extracts over 25 features from the URL and analyzes them using our trained model.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3 :-</div>
+                    <div class="step-content">
+                        <h3>Instant Results</h3>
+                        <p>Get immediate feedback on whether the URL is safe or potentially malicious.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2025 PhishGuard - By Nirdesh & Rutvi</p>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Contact</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlForm = document.getElementById('url-form');
+            const resultContainer = document.getElementById('result-container');
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('error-message');
+            const analyzedUrl = document.getElementById('analyzed-url');
+            const verdictBox = document.getElementById('verdict-box');
+            const verdictText = document.getElementById('verdict-text');
+            const confidenceFill = document.getElementById('confidence-fill');
+            const confidenceValue = document.getElementById('confidence-value');
+            const featuresToggle = document.getElementById('features-toggle');
+            const featuresDetails = document.getElementById('features-details');
+            const featuresTableBody = document.getElementById('features-table-body');
+
+            // Risk impact descriptions for features
+            const featureImpacts = {
+                'url_length': {
+                    description: 'URL Length',
+                    getRisk: value => value > 60 ? 'high' : value > 40 ? 'medium' : 'low'
+                },
+                'hostname_length': {
+                    description: 'Hostname Length',
+                    getRisk: value => value > 25 ? 'high' : value > 15 ? 'medium' : 'low'
+                },
+                'count_dots': {
+                    description: 'Number of Dots',
+                    getRisk: value => value > 4 ? 'high' : value > 2 ? 'medium' : 'low'
+                },
+                'count_hyphens': {
+                    description: 'Number of Hyphens',
+                    getRisk: value => value > 2 ? 'high' : value > 1 ? 'medium' : 'low'
+                },
+                'count_at': {
+                    description: 'Number of @ Symbols',
+                    getRisk: value => value > 0 ? 'high' : 'low'
+                },
+                'has_ip_address': {
+                    description: 'Contains IP Address',
+                    getRisk: value => value > 0 ? 'high' : 'low'
+                },
+                'suspicious_word_count': {
+                    description: 'Suspicious Words',
+                    getRisk: value => value > 2 ? 'high' : value > 0 ? 'medium' : 'low'
+                },
+                'is_https': {
+                    description: 'Uses HTTPS',
+                    getRisk: value => value === 0 ? 'medium' : 'low'
+                },
+                'subdomain_count': {
+                    description: 'Number of Subdomains',
+                    getRisk: value => value > 2 ? 'high' : value > 1 ? 'medium' : 'low'
+                }
+            };
+
+            // Handle form submission
+            urlForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(urlForm);
+                const url = formData.get('url');
+                
+                // Hide previous results and errors
+                resultContainer.style.display = 'none';
+                errorMessage.style.display = 'none';
+                
+                // Show loading indicator
+                loading.style.display = 'flex';
+                
+                // Send request to server
+                fetch('/check', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading indicator
+                    loading.style.display = 'none';
+                    
+                    if (data.error) {
+                        // Show error message
+                        errorMessage.textContent = data.error;
+                        errorMessage.style.display = 'block';
+                        return;
+                    }
+                    
+                    // Update result container
+                    analyzedUrl.textContent = data.url;
+                    
+                    // Set verdict text and style
+                    if (data.is_phishing) {
+                        verdictBox.className = 'verdict-box dangerous';
+                        verdictText.innerHTML = `<h3>Potentially Malicious</h3><p>This URL shows characteristics of a phishing attempt. Proceed with extreme caution!</p>`;
+                    } else {
+                        verdictBox.className = 'verdict-box safe';
+                        verdictText.innerHTML = `<h3>Likely Safe</h3><p>This URL appears to be legitimate. No obvious phishing indicators detected.</p>`;
+                    }
+                    
+                    // Update confidence meter
+                    const confidencePercentage = data.is_phishing ? data.confidence : (100 - data.confidence);
+                    confidenceFill.style.width = `${confidencePercentage}%`;
+                    confidenceValue.textContent = `${confidencePercentage.toFixed(1)}%`;
+                    
+                    // Set confidence meter color
+                    if (confidencePercentage > 90) {
+                        confidenceFill.className = 'meter-fill high-confidence';
+                    } else if (confidencePercentage > 70) {
+                        confidenceFill.className = 'meter-fill medium-confidence';
+                    } else {
+                        confidenceFill.className = 'meter-fill low-confidence';
+                    }
+                    
+                    // Populate features table
+                    featuresTableBody.innerHTML = '';
+                    for (const [key, value] of Object.entries(data.features)) {
+                        if (featureImpacts[key]) {
+                            const risk = featureImpacts[key].getRisk(value);
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${featureImpacts[key].description}</td>
+                                <td>${value}</td>
+                                <td><span class="risk-level risk-${risk}">${risk.toUpperCase()}</span></td>
+                            `;
+                            featuresTableBody.appendChild(row);
+                        }
+                    }
+                    
+                    // Show result container
+                    resultContainer.style.display = 'block';
+                    
+                    // Save to history if user is logged in
+                    if ({% if current_user.is_authenticated %}true{% else %}false{% endif %}) {
+                        fetch('/save_history', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                url: data.url,
+                                is_phishing: data.is_phishing,
+                                confidence: confidencePercentage
+                            })
+                        });
+                    }
+                })
+                .catch(error => {
+                    // Hide loading indicator
+                    loading.style.display = 'none';
+                    
+                    // Show error message
+                    errorMessage.textContent = 'An error occurred while analyzing the URL. Please try again.';
+                    errorMessage.style.display = 'block';
+                    console.error('Error:', error);
+                });
+            });
+            
+            // Toggle technical details
+            featuresToggle.addEventListener('click', function() {
+                if (featuresDetails.style.display === 'none') {
+                    featuresDetails.style.display = 'block';
+                    featuresToggle.querySelector('i').className = 'fas fa-chevron-up';
+                    featuresToggle.querySelector('span').textContent = 'Hide Technical Details';
+                } else {
+                    featuresDetails.style.display = 'none';
+                    featuresToggle.querySelector('i').className = 'fas fa-chevron-down';
+                    featuresToggle.querySelector('span').textContent = 'Show Technical Details';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
